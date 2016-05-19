@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Singapore PSI</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
+  <link rel="icon" type="image/png" href="http://www.stephenmccready.com/SingWeather/favicon.ico">
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/singPSI.css">
+</head>
+<body>
+  <div class="container-fluid" id="container-head">
+    <h4>Singapore Pollutant Standards Index (PSI) Data</h4>
+    <h5>From the National Environment Agency</h5>
+    <h5 id="mainHeader">.</h5>
+  </div>
+  <div class="container-fluid" id="pageContainer">
+    <div id="map-container">
+      <div id="map-panel">
+        <div><img class="marker" alt="Good" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" />Good</div>
+        <div><img class="marker" alt="Moderate" src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png" />Moderate</div>
+        <div><img class="marker" alt="Unhealthy" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png" />Unhealthy</div>
+        <div><img class="marker" alt="Very Unhealthy" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png" />Very Unhealthy</div>
+        <div><img class="marker" alt="Hazardous" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png" />Hazardous</div>
+        <div class="seperator"></div>
+        <div>Row 1: 24hr PSI / PM<sub>2.5</sub> / PM<sub>10</sub> / SO<sub>2</sub></div>
+        <div>Row 2: CO / O<sub>3</sub> / PM<sub>2.5</sub> / PM<sub>10</sub> / SO<sub>2</sub></div>
+        <div>Row 3: 3hr PM<sub>2.5</sub> / 1hr NO<sub>2</sub></div>
+        <div>Row 4: 8hr CO / O<sub>3</sub></div>
+        <div class="seperator"></div>
+        <div>PM<sub>2.5</sub> = Fine Particle Matter</div>
+        <div>PM<sub>10</sub> = Particle Matter</div>
+        <div>SO<sub>2</sub> = Sulphur Dioxide</div>
+        <div>CO = Carbon Monoxide</div>
+        <div>O<sub>3</sub> = Ozone</div>
+        <div>NO<sub>2</sub> = Nitrogen Dioxide</div>
+      </div>
+      <div id="map-canvas"></div>
+    </div>
+    <div><a href="http://www.nea.gov.sg/anti-pollution-radiation-protection/air-pollution-control/psi" target="_blank">For more info click here</a></div>
+  </div>
+  <script src="js/singPSI.js" ></script>
+</body>
+</html>
