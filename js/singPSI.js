@@ -1,136 +1,359 @@
-html, body {
-    padding: 0;
-    margin: 0;
-}
+var transitLayer = new google.maps.TransitLayer();
+var mapCenter = new google.maps.LatLng(1.395, 103.77);
+var mapOptions = {
+    zoom: 11,
+    center: mapCenter,
+    panControl:true,
+    zoomControl:true,
+    mapTypeControl:true,
+    scaleControl:true,
+    streetViewControl:true,
+    overviewMapControl:true,
+    rotateControl:true,
+    mapTypeControlOptions: {
+	style:google.maps.MapTypeControlStyle.DROPDOWN_MENU
+    },
+};
+var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+var currentTimeRange="";
+var apikeyref="781CF461BB6606ADEA01E0CAF8B352745D7D53A4EBE4FA32";
 
-.affix {
-    top: 0;
-    width: 100%;
-}
+// Abbreviation of the weather forecast. Maintain a count of each one displayed for later use in the map icon legend
+var BR=0,CL=0,DR=0,FA=0,FG=0,FN=0,FW=0,HG=0,HR=0,HS=0,HT=0,HZ=0,LH=0,LR=0,LS=0,OC=0,PC=0
+    ,PN=0,PS=0,RA=0,SH=0,SK=0,SN=0,SR=0,SS=0,SU=0,SW=0,TL=0,WC=0,WD=0,WF=0,WR=0,WS=0;
 
-.affix + .container-fluid {
-    padding-top: 75px;
-}
+// Array of months used in later date formatting
+var monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-#map-container, #map-canvas {width: 100%; height: 100%; position: relative; float: left; clear: both;}
-#container-head {background-color:#3366FF;color:#fff;height:7.5em;}
-#map-container { padding-top: 1%; float: left; clear: both;}
+// Array used to store infowindows so that all open ones can be closed at the click of a button
+var infoWindows = [];
+var PSIinfoWindows = [];
+var PSImarkers = [];
 
-@media screen and (min-width: 800px) {
-    #PSI {
-        font-size: 1.25em;
-        background-color: #fff;
-        font-family: "Roboto","sans-serif";
-        overflow: visible;
-        left: 205px;
-        padding: 0.35em;
-        position: absolute;
-        top: 18px;
-        z-index: 5;
-        font-size: 1.1em;
-        max-width: 530px;
+$(document).ready(function () {
+    initialize();
+});
+
+function initialize() {
+
+    map.markers = [];
+    transitLayer.setMap(map);
+	
+    // Use geolocation to get the users location
+    if (navigator.geolocation) {
+	navigator.geolocation.getCurrentPosition(function(position) {
+	    var myLatLng = new google.maps.LatLng( position.coords.latitude, position.coords.longitude );
+	    myMarker=0;
+	    // build entire marker first time thru
+	    if ( !myMarker ) {
+		// define our custom marker image
+		var image = new google.maps.MarkerImage(
+		    'img/bluedot_retina.png',
+		    null, // size
+		    null, // origin
+		    new google.maps.Point( 8, 8 ), // anchor (move to center of marker)
+		    new google.maps.Size( 17, 17 ) // scaled size (required for Retina display icon)
+		);
+		// then create the new marker
+		myMarker = new google.maps.Marker({
+		    flat: true,
+		    icon: image,
+		    map: map,
+		    optimized: false,
+		    position: myLatLng,
+		    title: 'My location',
+		    visible: true,
+		});
+	    // just change marker position on subsequent passes
+	    } else {
+	        myMarker.setPosition( myLatLng );
+	    }
+	});
     }
     
-    #map-panel {
-        background-color: #fff;
-        font-family: "Roboto","sans-serif";
-        overflow: visible;
-        left: 1%;
-        padding: 0.35em;
-        position: absolute;
-        top: 75px;
-        z-index: 5;
-        font-size: 1.1em;
-	box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.3);
-    }
+// Load PSI Data 
+    loadPSIUpdate();
+}
+
+function loadPSIUpdate() {
+    // The PSI update XML dataset provides PSI readings in Singapore for 5 regions
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+	if (xhttp.readyState == 4 && xhttp.status == 200) {
+	    loadPSIUpdateData(xhttp);
+	} else {
+	    if (xhttp.readyState == 4 && xhttp.status == 401) {
+		alert('Error in retreiving the Heavy Rain Warning. ('+xhttp.status+')');
+	    } else {
+		if (xhttp.readyState == 4 && xhttp.status == 404) {
+		    alert('Heavy Rain Warning is not currently available. Please try again later. ('+xhttp.status+')');
+		}
+	    }
+	}
+  };
+  var url="http://www.nea.gov.sg/api/WebAPI/?dataset=psi_update&keyref="+apikeyref;
+  xhttp.open("GET", url, true);
+  xhttp.send(); 
+}
+
+/* PSI Info
+sulphur dioxide (SO2)
+particulate matter (PM10)
+fine particulate matter (PM2.5)
+nitrogen dioxide (NO2)
+carbon monoxide (CO)
+ozone (O3)
+
+North
+Admirality, Kranji, Woodlands, Sembawang, Yishun, Yio Chu Kang, Seletar, Sengkang
+South
+Holland, Queenstown, Bukit Merah, Telok Blangah, Pasir Panjang, Sentosa, Bukit Timah, Newton, Orchard, City, Marina South
+East
+Serangoon, Punggol, Hougang, Tampines, Pasir Ris, Loyang, Simei, Kallang, Katong, East Coast, Macpherson, Bedok, Pulau Ubin, Pulau Tekong
+West
+Lim Chu Kang, Choa Chu Kang, Bukit Panjang, Tuas, Jurong East, Jurong West, Jurong Industrial Estate, Bukit Batok, Hillview, West Coast, Clementi
+Central
+Thomson, Marymount, Sin Ming, Ang Mo Kio, Bishan, Serangoon Gardens, MacRitchie, Toa Payoh 
+*/
+
+function loadPSIUpdateData(xml) {
+    var xmlDoc = xml.responseXML;
+    map.markers = [];
+    transitLayer.setMap(map);    
+    map.setZoom(11);
     
-    #pageContainer {height: 550px;}
-    #map-panel img {width:25px; height: 25px;}
+    var readingDateTime=xmlDoc.getElementsByTagName('record')[0].getAttribute('timestamp');
+    var dd=readingDateTime.substr(6,2);
+    var mm=parseInt(readingDateTime.substr(4,2))-1;
+    var mmm=monthNames[mm];
+    var hhmm=readingDateTime.substr(8,2)+":"+readingDateTime.substr(10,2);
+    $("#mainHeader").html(dd+' '+mmm+' at '+hhmm);
+    
+    var i=0, lat=0, lng=0;
+    for (r=0; r<6; r++) {
+	i=r*13; // NPSI			Row 1
+	var latitude = xmlDoc.getElementsByTagName('latitude')[r].childNodes[0].nodeValue
+	var longitude = xmlDoc.getElementsByTagName('longitude')[r].childNodes[0].nodeValue;
+	var latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)-0.0230 );
+	var readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	var readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	var PSIobject=getPSIicon(readingValue);
+	var icon=PSIobject.icon;
+	var infoHeader=PSIobject.infowindowheader;
+	var content=infoHeader+"24 Hour PSI</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'NPSI'); //latlng, title, content, icon, filter
+
+	i++; // NPSI_PM25_3HR		Row 3
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.02, parseFloat(longitude) );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>3 Hour Fine Particle Matter (PM<sub>2.5</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+
+	// NPSI_PM25_1HR 	Row 3
+	// From another file TBD  longitude-0.0115
+	
+	i++; // NO2_1HR_MAX		Row 3
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.02, parseFloat(longitude)-0.0230 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>1 hour Nitrogen Dioxide (NO<sub>2</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+
+	i++; // PM10_24HR		Row 1
+	latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude) );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Particle Matter (PM<sub>10</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+
+	i++; // PM25_24HR		Row 1
+	latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)-0.0115 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Fine Particle Matter (PM<sub>2.5</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // SO2_24HR		Row 1
+	latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)+0.0115 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Sulphur Dioxide (SO<sub>2</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // CO_8HR_MAX		Row 4
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.03, parseFloat(longitude)-0.023 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>8 Hour Carbon Monoxide (CO)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // O3_8HR_MAX		Row 4
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.03, parseFloat(longitude)-0.0115 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>8 Hour Ozone (O<sub>3</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // NPSI_CO			Row 2
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)-0.023 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Carbon Monoxide (CO)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // NPSI_O3			Row 2
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)-0.0115 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Ozone (O<sub>3</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // NPSI_PM10		Row 2
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)+0.0115 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Particle Matter (PM<sub>10</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // NPSI_PM25		Row 2
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude) );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Fine Particle Matter (PM<sub>2.5</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	
+	i++; // NPSI_SO2		Row 2
+	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)+0.023 );
+	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	PSIobject=getPSIicon(readingValue);
+	icon=PSIobject.icon;
+	content="<h5>24 Hour Sulphur Dioxide (SO<sub>2</sub>)</h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+    }
+}    
+
+/*
+PSI Value	Air Quality Descriptor
+0 - 50		Good			#479b02
+51 - 100	Moderate		#006fa1
+101 - 200	Unhealthy		#e7b60d
+201 - 300	Very unhealthy		#ea8522
+Above 300	Hazardous		#d60000
+*/
+function getPSIicon(PSIValue) {
+    var icon='http://maps.google.com/mapfiles/ms/icons/';
+    var text='';
+    var infowindowheader='';
+    if (PSIValue<=50){
+	icon+="green-dot.png";
+	text="<span class='airQualityGood'>Good</span>";
+	infowindowheader="<h5 class='airBGQualityGood'>";
+    } else {
+	if(PSIValue<=100){
+	    icon+="blue-dot.png";
+		text="<span class='airQualityModerate'>Moderate</span>";
+		infowindowheader="<h5 class='airBGQualityModerate'>";
+	} else {
+	    if(PSIValue<=200){
+		icon+="yellow-dot.png";
+		text="<span class='airQualityUnhealthy'>Unhealthy</span>";
+		infowindowheader="<h5 class='airBGQualityUnhealthy'>";
+	    } else {
+		if(PSIValue<=300){
+		    icon+="orange-dot.png";
+		    text="<span class='airQualityVeryUnhealthy'>Very unhealthy</span>";
+		    infowindowheader="<h5 class='airBGQualityVeryUnhealthy'>";
+		} else {
+		    icon+="red-dot.png";
+		    text="<span class='airQualityHazardous'>Hazardous</span>";
+		    infowindowheader="<h5 class='airBGQualityHazardous'>";
+		}
+	    }
+	}
+    }
+    return {icon: icon, text: text, infowindowheader: infowindowheader};
 }
 
-@media screen and (max-width: 800px) {
-    #pageContainer {height: 525px;}
-    #map-container {height: 475px;}
-    #map-canvas {height: 100%;}
-    #map-panel { margin-bottom: 0.5em; }
+// ******************************************************************************************************
+// Generic Functions
+// ******************************************************************************************************
+
+// Using the filter element of the marker object, hide or show the relevant markers
+function filterMapLayer(filter) {
+    $.each(map.markers, function () {
+	if (filter==this.filter) {
+	    if (this.map == null) {
+		this.setMap(map);
+	    }
+	} else {
+	    this.setMap(null);
+	}
+    });
 }
 
-.legend { background-color: silver; padding: .1em; text-align: center; font-size: 1.1em; font-weight: bold;}
-.legendItem {float: left;}
+// Generic add PSI marker to the map function
+function addMarker(latlng, title, content, icon, filter) {
 
-@-moz-keyframes pulsate {
-    from {
-	    -moz-transform: scale(0.25);
-	    opacity: 1.0;
-    }
-    95% {
-	    -moz-transform: scale(1.3);
-	    opacity: 0;
-    }
-    to {
-	    -moz-transform: scale(0.3);
-    	opacity: 0;
-    }
-}
-@-webkit-keyframes pulsate {
-    from {
-	    -webkit-transform: scale(0.25);
-	    opacity: 1.0;
-    }
-    95% {
-            -webkit-transform: scale(1.3);
-	    opacity: 0;
-    }
-    to {
-	    -webkit-transform: scale(0.3);
-	    opacity: 0;
-    }
-}
-/* get the container that's just outside the marker image, which just happens to have our Marker title in it */
-#map-canvas div.gmnoprint[title="My location"] {
-    -moz-animation: pulsate 1.5s ease-in-out infinite;
-    -webkit-animation: pulsate 1.5s ease-in-out infinite;
-    border:1pt solid #fff;
-    /* make a circle */
-    -moz-border-radius:51px;
-    -webkit-border-radius:51px;
-    border-radius:51px;
-    /* multiply the shadows, inside and outside the circle */
-    -moz-box-shadow:inset 0 0 5px #06f, inset 0 0 5px #06f, inset 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f;
-    -webkit-box-shadow:inset 0 0 5px #06f, inset 0 0 5px #06f, inset 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f;
-    box-shadow:inset 0 0 5px #06f, inset 0 0 5px #06f, inset 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f, 0 0 5px #06f;
-    /* set the ring's new dimension and re-center it */
-    height:51px!important;
-    margin:-18px 0 0 -18px;
-    width:51px!important;
-}
-/* hide the superfluous marker image since it would expand and shrink with its containing element */
-#map-canvas div.gmnoprint[title="My location"] img {
-    display:none;
-}
+    var marker = new google.maps.Marker({
+	position: latlng,
+	map: map,
+	title: title,
+        icon: icon,
+	content: content,
+	filter: filter
+    });
+    map.markers.push(marker);
 
-/* compensate for iPhone and Android devices with high DPI, add iPad media query */
-@media only screen and (-webkit-min-device-pixel-ratio: 1.5), only screen and (device-width: 768px) {
-    #map-canvas div.gmnoprint[title="My location"] {
-	margin:-10px 0 0 -10px;
+    var infowindow = new google.maps.InfoWindow({disableAutoPan: true});
+    google.maps.event.addListener(marker, 'click', (function(marker) {
+	return function() {
+	    infowindow.setContent(this.content);
+	    infowindow.open(map, marker);
+	    infoWindows.push(infowindow); 
+	}
+    })(marker));
+
+    if(filter=='NPSI'){
+	infowindow.setContent(content);
+        infowindow.open(map, marker);
+	infoWindows.push(infowindow);
+	PSIinfoWindows.push(infowindow); 
+	PSImarkers.push(marker); 
     }
 }
 
-.airQualityGood {color: #479b02;}
-.airQualityModerate {color: #006fa1;}
-.airQualityUnhealthy {color: #e7b60d;}
-.airQualityVeryUnhealthy {color: #ea8522;}
-.airQualityHazardous {color: #d60000;}
+function closeAllInfoWindows() {
+  for (var i=0;i<infoWindows.length;i++) {
+     infoWindows[i].close();
+  }
+}
 
-.airBGQualityGood {background-color: #479b02; color: #fff; padding: 0 1em 0 1em;}
-.airBGQualityModerate {background-color: #006fa1; color: #fff; padding: 0 1em 0 1em;}
-.airBGQualityUnhealthy {background-color: #e7b60d; padding: 0 1em 0 1em;}
-.airBGQualityVeryUnhealthy {background-color: #ea8522; color: #fff; padding: 0 1em 0 1em;}
-.airBGQualityHazardous {background-color: #d60000; color: #fff; padding: 0 1em 0 1em;}
-
-.seperator {border-top: 1px solid silver; height: 0.5em; margin-top: 0.5em; clear: all;}
-
-.gm-style-iw {
-top: -3px !important;	
-bottom: 3px !important;
+function openPSIWindows() {
+  for (var i=0;i<PSIinfoWindows.length;i++) {
+    PSIinfoWindows[i].open(map, PSImarkers[i]);
+  }
 }
