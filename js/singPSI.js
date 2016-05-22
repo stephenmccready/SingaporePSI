@@ -16,7 +16,8 @@ var mapOptions = {
 };
 var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 var currentTimeRange="";
-var apikeyref="781CF461BB6606ADEA01E0CAF8B352745D7D53A4EBE4FA32";
+var apikeyref="??????????????????????????????????????????????";
+// Put your own NEA API ref key here ^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Abbreviation of the weather forecast. Maintain a count of each one displayed for later use in the map icon legend
 var BR=0,CL=0,DR=0,FA=0,FG=0,FN=0,FW=0,HG=0,HR=0,HS=0,HT=0,HZ=0,LH=0,LR=0,LS=0,OC=0,PC=0
@@ -25,10 +26,7 @@ var BR=0,CL=0,DR=0,FA=0,FG=0,FN=0,FW=0,HG=0,HR=0,HS=0,HT=0,HZ=0,LH=0,LR=0,LS=0,O
 // Array of months used in later date formatting
 var monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-// Array used to store infowindows so that all open ones can be closed at the click of a button
 var infoWindows = [];
-var PSIinfoWindows = [];
-var PSImarkers = [];
 
 $(document).ready(function () {
     initialize();
@@ -132,129 +130,217 @@ function loadPSIUpdateData(xml) {
     var i=0, lat=0, lng=0;
     for (r=0; r<6; r++) {
 	i=r*13; // NPSI			Row 1
-	var latitude = xmlDoc.getElementsByTagName('latitude')[r].childNodes[0].nodeValue
-	var longitude = xmlDoc.getElementsByTagName('longitude')[r].childNodes[0].nodeValue;
-	var latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)-0.0230 );
+	var id = xmlDoc.getElementsByTagName('id')[r].childNodes[0].nodeValue
+	
+	if(id!="NRS") {
+	    var latitude = xmlDoc.getElementsByTagName('latitude')[r].childNodes[0].nodeValue;
+	    var longitude = xmlDoc.getElementsByTagName('longitude')[r].childNodes[0].nodeValue;
+	    var latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)-0.0230 );
+	    var readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    var readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    var PSIobject=getPSIicon(readingValue);
+	    var icon=PSIobject.icon;
+	    var infoHeader=PSIobject.infowindowheader;
+	    var content=infoHeader+"24 hour PSI</h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+    
+	    i++; // NPSI_PM25_3HR		Row 3
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.02, parseFloat(longitude)-0.00575 );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"3 hour PM<sub>2.5</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+    
+	    // NPSI_PM25_1HR 			Row 4
+	    // From another file TBD  latitude-0.03
+	    
+	    i++; // NO2_1HR_MAX			Row 4
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.03, parseFloat(longitude) );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"1 hour NO<sub>2</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+    
+	    i++; // PM10_24HR		Row 1
+	    latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude) );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour PM<sub>10</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+    
+	    i++; // PM25_24HR		Row 1
+	    latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)-0.0115 );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour PM<sub>2.5</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+
+	    i++; // SO2_24HR		Row 1
+	    latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)+0.0115 );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour SO<sub>2</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+
+	    i++; // CO_8HR_MAX		Row 2
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)-0.0115);
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"8 hour CO</h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+
+	    i++; // O3_8HR_MAX		Row 2
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude));
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"8 hour O<sub>3</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+/*
+	    i++; // NPSI_CO			Row 2
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)-0.023 );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour CO</h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+
+	    i++; // NPSI_O3			Row 2
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)-0.0115 );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour O<sub>3</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+
+	    i++; // NPSI_PM10		Row 2
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)+0.0115 );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour PM<sub>10</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+
+	    i++; // NPSI_PM25		Row 2
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude) );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour PM<sub>2.5</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+
+	    i++; // NPSI_SO2		Row 2
+	    latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)+0.023 );
+	    readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
+	    readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
+	    PSIobject=getPSIicon(readingValue);
+	    icon=PSIobject.icon;
+	    infoHeader=PSIobject.infowindowheader;
+	    content=infoHeader+"24 hour SO<sub>2</sub></h5>"+readingValue+" - "+PSIobject.text;
+	    addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
+*/
+	}
+    }
+    loadHourlyPM25Update();
+}    
+
+
+function loadHourlyPM25Update() {
+    // The PM2.5 update XML dataset provides hourly Fine Particle Matter (PM 2.5) readings in Singapore for 5 regions
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+	if (xhttp.readyState == 4 && xhttp.status == 200) {
+	    loadHourlyPM25UpdateData(xhttp);
+	} else {
+	    if (xhttp.readyState == 4 && xhttp.status == 401) {
+		alert('Error in retreiving the hourly Fine Particle Matter (PM 2.5) data. ('+xhttp.status+')');
+	    } else {
+		if (xhttp.readyState == 4 && xhttp.status == 404) {
+		    alert('The Hourly Fine Particle Matter (PM 2.5)  is not currently available. Please try again later. ('+xhttp.status+')');
+		}
+	    }
+	}
+  };
+  var url="http://www.nea.gov.sg/api/WebAPI/?dataset=pm2.5_update&keyref="+apikeyref;
+  xhttp.open("GET", url, true);
+  xhttp.send();
+}
+
+function loadHourlyPM25UpdateData(xml) {
+    // Row 3, longitude + 0.0115
+    var xmlDoc = xml.responseXML;
+    
+    var readingDateTime=xmlDoc.getElementsByTagName('record')[0].getAttribute('timestamp');
+    var dd=readingDateTime.substr(6,2);
+    var mm=parseInt(readingDateTime.substr(4,2))-1;
+    var mmm=monthNames[mm];
+    var hhmm=readingDateTime.substr(8,2)+":"+readingDateTime.substr(10,2);
+    $("#mainHeader").html(dd+' '+mmm+' at '+hhmm);  
+
+    for (i=0; i<5; i++) {  
+	var latitude = xmlDoc.getElementsByTagName('latitude')[i].childNodes[0].nodeValue;
+	var longitude = xmlDoc.getElementsByTagName('longitude')[i].childNodes[0].nodeValue;
+	var latlng = new google.maps.LatLng( parseFloat(latitude)-0.03, parseFloat(longitude)-0.0115 );
 	var readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
 	var readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
 	var PSIobject=getPSIicon(readingValue);
 	var icon=PSIobject.icon;
 	var infoHeader=PSIobject.infowindowheader;
-	var content=infoHeader+"24 Hour PSI</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'NPSI'); //latlng, title, content, icon, filter
-
-	i++; // NPSI_PM25_3HR		Row 3
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.02, parseFloat(longitude) );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>3 Hour Fine Particle Matter (PM<sub>2.5</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-
-	// NPSI_PM25_1HR 	Row 3
-	// From another file TBD  longitude-0.0115
-	
-	i++; // NO2_1HR_MAX		Row 3
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.02, parseFloat(longitude)-0.0230 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>1 hour Nitrogen Dioxide (NO<sub>2</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-
-	i++; // PM10_24HR		Row 1
-	latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude) );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Particle Matter (PM<sub>10</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-
-	i++; // PM25_24HR		Row 1
-	latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)-0.0115 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Fine Particle Matter (PM<sub>2.5</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // SO2_24HR		Row 1
-	latlng = new google.maps.LatLng( parseFloat(latitude), parseFloat(longitude)+0.0115 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Sulphur Dioxide (SO<sub>2</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // CO_8HR_MAX		Row 4
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.03, parseFloat(longitude)-0.023 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>8 Hour Carbon Monoxide (CO)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // O3_8HR_MAX		Row 4
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.03, parseFloat(longitude)-0.0115 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>8 Hour Ozone (O<sub>3</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // NPSI_CO			Row 2
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)-0.023 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Carbon Monoxide (CO)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // NPSI_O3			Row 2
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)-0.0115 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Ozone (O<sub>3</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // NPSI_PM10		Row 2
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)+0.0115 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Particle Matter (PM<sub>10</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // NPSI_PM25		Row 2
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude) );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Fine Particle Matter (PM<sub>2.5</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
-	
-	i++; // NPSI_SO2		Row 2
-	latlng = new google.maps.LatLng( parseFloat(latitude)-0.01, parseFloat(longitude)+0.023 );
-	readingType=xmlDoc.getElementsByTagName('reading')[i].getAttribute('type');
-	readingValue=xmlDoc.getElementsByTagName('reading')[i].getAttribute('value');
-	PSIobject=getPSIicon(readingValue);
-	icon=PSIobject.icon;
-	content="<h5>24 Hour Sulphur Dioxide (SO<sub>2</sub>)</h5>"+readingValue+" - "+PSIobject.text;
-	addMarker(latlng, readingType , content, icon, 'PSI'); //latlng, title, content, icon, filter
+	var content=infoHeader+"1 hour PM<sub>2.5</sub></h5>"+readingValue+" - "+PSIobject.text;
+	addMarker(latlng, readingType , content, icon, readingType); //latlng, title, content, icon, filter
     }
-}    
+    
+    // Open PSI infowindows
+     $.each(map.markers, function () {
+	if (this.type=="NPSI") {
+	    google.maps.event.trigger(this, 'click');
+	}
+    });
+    
+    
+}
+
+$("input[name='type']").change(function(){
+    
+//  Close all infowindows in the array
+    for (var i=0;i<infoWindows.length;i++) {
+	infoWindows[i].close();
+    }
+    
+    $.each(map.markers, function () {
+	if ($("input[name='type']:checked").val()==this.type) {
+	    google.maps.event.trigger(this, 'click');
+	}
+    });
+});
 
 /*
 PSI Value	Air Quality Descriptor
@@ -301,22 +387,8 @@ function getPSIicon(PSIValue) {
 // ******************************************************************************************************
 // Generic Functions
 // ******************************************************************************************************
-
-// Using the filter element of the marker object, hide or show the relevant markers
-function filterMapLayer(filter) {
-    $.each(map.markers, function () {
-	if (filter==this.filter) {
-	    if (this.map == null) {
-		this.setMap(map);
-	    }
-	} else {
-	    this.setMap(null);
-	}
-    });
-}
-
 // Generic add PSI marker to the map function
-function addMarker(latlng, title, content, icon, filter) {
+function addMarker(latlng, title, content, icon, type) {
 
     var marker = new google.maps.Marker({
 	position: latlng,
@@ -324,36 +396,20 @@ function addMarker(latlng, title, content, icon, filter) {
 	title: title,
         icon: icon,
 	content: content,
-	filter: filter
+	type: type,
     });
     map.markers.push(marker);
-
+    marker.infowindow = new google.maps.InfoWindow({
+	content: content,
+    });
+	
     var infowindow = new google.maps.InfoWindow({disableAutoPan: true});
     google.maps.event.addListener(marker, 'click', (function(marker) {
 	return function() {
 	    infowindow.setContent(this.content);
 	    infowindow.open(map, marker);
-	    infoWindows.push(infowindow); 
 	}
     })(marker));
 
-    if(filter=='NPSI'){
-	infowindow.setContent(content);
-        infowindow.open(map, marker);
-	infoWindows.push(infowindow);
-	PSIinfoWindows.push(infowindow); 
-	PSImarkers.push(marker); 
-    }
-}
-
-function closeAllInfoWindows() {
-  for (var i=0;i<infoWindows.length;i++) {
-     infoWindows[i].close();
-  }
-}
-
-function openPSIWindows() {
-  for (var i=0;i<PSIinfoWindows.length;i++) {
-    PSIinfoWindows[i].open(map, PSImarkers[i]);
-  }
+    infoWindows.push(infowindow);
 }
