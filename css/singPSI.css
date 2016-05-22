@@ -42,6 +42,7 @@ html, body {
         z-index: 5;
         font-size: 1.1em;
 	box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.3);
+	width: 30%;
     }
     
     #pageContainer {height: 550px;}
@@ -55,7 +56,7 @@ html, body {
     #map-panel { margin-bottom: 0.5em; }
 }
 
-.legend { background-color: silver; padding: .1em; text-align: center; font-size: 1.1em; font-weight: bold;}
+.legend { background-color: silver; padding: .05em; text-align: center; font-weight: bold;}
 .legendItem {float: left;}
 
 @-moz-keyframes pulsate {
@@ -122,15 +123,13 @@ html, body {
 .airQualityVeryUnhealthy {color: #ea8522;}
 .airQualityHazardous {color: #d60000;}
 
-.airBGQualityGood {background-color: #479b02; color: #fff; padding: 0 1em 0 1em;}
-.airBGQualityModerate {background-color: #006fa1; color: #fff; padding: 0 1em 0 1em;}
-.airBGQualityUnhealthy {background-color: #e7b60d; padding: 0 1em 0 1em;}
-.airBGQualityVeryUnhealthy {background-color: #ea8522; color: #fff; padding: 0 1em 0 1em;}
-.airBGQualityHazardous {background-color: #d60000; color: #fff; padding: 0 1em 0 1em;}
+.airBGQualityGood {background-color: #479b02; color: #fff; padding: 0.1em 1em 0.1em 1em; margin: 0.75em 0 0.25em 0 !important;}
+.airBGQualityModerate {background-color: #006fa1; color: #fff; padding: 0.1em 1em 0.1em 1em; margin: 0.75em 0 0.25em 0 !important;}
+.airBGQualityUnhealthy {background-color: #e7b60d; padding: 0.1em 1em 0.1em 1em; margin: 0.75em 0 0.25em 0 !important;}
+.airBGQualityVeryUnhealthy {background-color: #ea8522; color: #fff; padding: 0.1em 1em 0.1em 1em; margin: 0.75em 0 0.25em 0 !important;}
+.airBGQualityHazardous {background-color: #d60000; color: #fff; padding: 0.1em 1em 0.1em 1em; margin: 0.75em 0 0.25em 0 !important;}
 
 .seperator {border-top: 1px solid silver; height: 0.5em; margin-top: 0.5em; clear: all;}
 
-.gm-style-iw {
-top: -3px !important;	
-bottom: 3px !important;
-}
+.gm-style-iw {top: -3px !important; bottom: 2px !important;}
+.btn-group-vertical {width: 100% !important;}
