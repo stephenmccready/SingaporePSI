@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Singapore PSI</title>
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
   <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&signed_in=true"></script>
   <link rel="icon" type="image/png" href="http://www.stephenmccready.com/SingWeather/favicon.ico">
-  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/singPSI.css">
 </head>
 <body>
@@ -20,30 +20,43 @@
   <div class="container-fluid" id="pageContainer">
     <div id="map-container">
       <div id="map-panel">
-        <div>Row 1: 24hr PSI . PM<sub>2.5</sub> . PM<sub>10</sub> . SO<sub>2</sub></div>
-        <div>Row 2: 24hr CO . O<sub>3</sub> . PM<sub>2.5</sub> . PM<sub>10</sub> . SO<sub>2</sub></div>
-        <div>Row 3: 1hr NO<sub>2</sub> . 1hr PM<sub>2.5</sub> . 3hr PM<sub>2.5</sub></div>
-        <div>Row 4: 8hr CO . O<sub>3</sub></div>
-        <div class="seperator"> </div>
-        <div>PM<sub>2.5</sub> = Fine Particle Matter (2.5 &mu;&#47;m<sup>3</sup>)</div>
-        <div>PM<sub>10</sub> = Particle Matter (10 &mu;&#47;m<sup>3</sup>)</div>
-        <div>SO<sub>2</sub> = Sulphur Dioxide</div>
-        <div>CO = Carbon Monoxide</div>
-        <div>O<sub>3</sub> = Ozone</div>
-        <div>NO<sub>2</sub> = Nitrogen Dioxide</div>
-        <div class="seperator"> </div>
-        <div>&mu;&#47;m<sup>3</sup> = microns per square metre</div>
-        <div class="seperator"> </div>
+        <div class="form-group btn-group btn-group-vertical" data-toggle="buttons">
+            <label class="btn btn-primary active">
+                <input type="radio" name="type" id="NPSI" value="NPSI" autocomplete="off" checked>24hr Pollutant Standards Index (PSI)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="PM25_24HR" value="PM25_24HR" autocomplete="off">24hr Fine Particle Matter (PM<sub>2.5</sub>)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="PM10_24HR" value="PM10_24HR" autocomplete="off">24hr Particle Matter (PM<sub>10</sub>)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="SO2_24HR" value="SO2_24HR" autocomplete="off">24hr Sulphur Dioxide (SO<sub>2</sub>)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="CO_8HR_MAX" value="CO_8HR_MAX" autocomplete="off">8hr Carbon Monoxide (CO)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="O3_8HR_MAX" value="O3_8HR_MAX" autocomplete="off">8hr Ozone (O<sub>3</sub>)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="NPSI_PM25_3HR" value="NPSI_PM25_3HR" autocomplete="off">3hr Fine Particle Matter (PM<sub>2.5</sub>)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="PM25_RGN_1HR" value="PM25_RGN_1HR" autocomplete="off">1hr Fine Particle Matter (PM<sub>2.5</sub>)
+            </label>
+            <label class="btn btn-primary">
+                <input type="radio" name="type" id="NO2_1HR_MAX" value="NO2_1HR_MAX" autocomplete="off">1hr Nitrogen Dioxide (NO<sub>2</sub>)
+            </label>
+            <label class="btn btn-danger">
+                <input type="radio" name="type" id="CloseAll" value="CloseAll" autocomplete="off">Close All Map Information Windows
+            </label>
+        </div>
         <div class="legendItem"><img class="marker" alt="Good" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" />Good</div>
         <div class="legendItem"><img class="marker" alt="Moderate" src="http://maps.google.com/mapfiles/ms/icons/blue-dot.png" />Moderate</div>
         <div><img class="marker" alt="Unhealthy" src="http://maps.google.com/mapfiles/ms/icons/yellow-dot.png" />Unhealthy</div>
         <div class="legendItem"><img class="marker" alt="Very Unhealthy" src="http://maps.google.com/mapfiles/ms/icons/orange-dot.png" />Very Unhealthy</div>
         <div><img class="marker" alt="Hazardous" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png" />Hazardous</div>
-        <div class="seperator"> </div>
-        <div class="btn-group">
-            <button onclick="closeAllInfoWindows()" class="btn btn-danger">Close All Pop-Ups</button>
-            <button onclick="openPSIWindows()" class="btn btn-success">Open PSI Pop-Ups</button>
-        </div>
       </div>
       <div id="map-canvas"></div>
     </div>
